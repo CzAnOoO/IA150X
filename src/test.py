@@ -29,15 +29,15 @@ with h5py.File("data/brainTumorDataPublic_1766/1.mat", "r") as f:
 
     # np.savetxt("image_matrix.txt", img, fmt="%f")
 
-    plt.subplot(2, 2, 1)
+    plt.subplot(2, 3, 1)
     plt.title(f"Image label={label}")
     plt.imshow(img, cmap="gray")
 
-    plt.subplot(2, 2, 2)
+    plt.subplot(2, 3, 2)
     plt.title("Mask")
     plt.imshow(tumorMask, cmap="gray")
 
-    plt.subplot(2, 2, 3)
+    plt.subplot(2, 3, 3)
     plt.title("Image && Mask")
     plt.imshow(iMg, cmap="gray")
 
@@ -48,8 +48,28 @@ with h5py.File("data/brainTumorDataPublic_1766/1.mat", "r") as f:
     tumor = slice[0]
     iMg_cropped = iMg[tumor]
 
-    plt.subplot(2, 2, 4)
+    plt.subplot(2, 3, 4)
     plt.title("Cropping")
     plt.imshow(iMg_cropped, cmap="gray")
+
+    # Padding
+    current_h, current_w = iMg_cropped.shape
+
+    # Goal is 224 x 224 pixel
+    pad_h = 224 - current_h
+    pad_w = 224 - current_w
+
+    pad_top = pad_h // 2
+    pad_bottom = pad_h - pad_top
+    pad_left = pad_w // 2
+    pad_right = pad_w - pad_left
+
+    iMg_padded = np.pad(
+        iMg_cropped, pad_width=((pad_top, pad_bottom), (pad_left, pad_right))
+    )
+
+    plt.subplot(2, 3, 5)
+    plt.title("Padding: 224 x 224")
+    plt.imshow(iMg_padded, cmap="gray")
 
     plt.show()
