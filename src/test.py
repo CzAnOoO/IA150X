@@ -9,7 +9,21 @@ from PIL import Image, ImageOps
 """ 
 https://docs.h5py.org/en/3.5.0/quick.html
  """
-with h5py.File("data/brainTumorDataPublic_1766/1.mat", "r") as f:
+# Error processing file: data/brainTumorDataPublic_15332298/2132.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2763.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2762.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2370.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2371.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2761.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2759.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2939.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2379.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2768.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2382.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2989.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2380.mat | Exception: index can't contain negative values
+# Error processing file: data/brainTumorDataPublic_22993064/2381.mat | Exception: index can't contain negative values
+with h5py.File("data/brainTumorDataPublic_22993064/2382.mat", "r") as f:
     # Read .mat files in Python: https://codemia.io/knowledge-hub/path/read_mat_files_in_python
     print(list(f.keys()))
 
@@ -28,7 +42,7 @@ with h5py.File("data/brainTumorDataPublic_1766/1.mat", "r") as f:
     iMg = img * tumorMask
 
     # np.savetxt("image_matrix.txt", img, fmt="%f")
-
+    print(f"Label {label}")
     plt.subplot(2, 3, 1)
     plt.title(f"Image label={label}")
     plt.imshow(img, cmap="gray")
@@ -54,6 +68,17 @@ with h5py.File("data/brainTumorDataPublic_1766/1.mat", "r") as f:
 
     # Padding
     current_h, current_w = iMg_cropped.shape
+
+    if current_h > 224 or current_w > 224:
+        scale = 224 / max(current_h, current_w)
+        new_h = int(current_h * scale)
+        new_w = int(current_w * scale)
+
+        iMg_cropped = Image.fromarray(iMg_cropped)
+        iMg_cropped = iMg_cropped.resize((new_w, new_h), Image.BILINEAR)
+        iMg_cropped = np.array(iMg_cropped)
+
+        current_h, current_w = iMg_cropped.shape
 
     # Goal is 224 x 224 pixel
     pad_h = 224 - current_h

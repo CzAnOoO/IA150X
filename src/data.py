@@ -36,6 +36,19 @@ def process_mat(file_path):
 
     # Padding
     h, w = cropped.shape
+
+    # some images of brain tumors is larger than 224 pixel (e.g. 2132,2763 ...)
+    if h > 224 or w > 224:
+        scale = 224 / max(h, w)
+        new_h = int(h * scale)
+        new_w = int(w * scale)
+
+        cropped = Image.fromarray(cropped)
+        cropped = cropped.resize((new_w, new_h), Image.BILINEAR)
+        cropped = np.array(cropped)
+
+        h, w = cropped.shape
+
     pad_h = 224 - h
     pad_w = 224 - w
     # pad_top = pad_h // 2
@@ -54,21 +67,25 @@ import random
 for folder in input_dirs:
     for file in os.listdir(folder):
         path = os.path.join(folder, file)
-        img, label = process_mat(path)
+        try:
+            img, label = process_mat(path)
 
-        # random
-        r = random.random()
-        if r < 0.8:
-            split = "train"
-        elif r < 0.9:
-            split = "val"
-        else:
-            split = "test"
+            # random
+            r = random.random()
+            if r < 0.8:
+                split = "train"
+            elif r < 0.9:
+                split = "val"
+            else:
+                split = "test"
 
-        # intensity normalization: Max-Min
-        img = ((img - img.min()) / (img.max() - img.min()) * 255).astype(np.uint8)
+            # intensity normalization: Max-Min
+            img = ((img - img.min()) / (img.max() - img.min()) * 255).astype(np.uint8)
 
-        # save as .png
-        im = Image.fromarray(img)
-        save_path = f"{output_dir}/{split}/{label_map[label]}/{file}.png"
-        im.save(save_path)
+            # save as .png
+            im = Image.fromarray(img)
+            save_path = f"{output_dir}/{split}/{label_map[label]}/{file}.png"
+            im.save(save_path)
+
+        except Exception as e:
+            print(f"Error processing file: {path} | Exception: {e}")
