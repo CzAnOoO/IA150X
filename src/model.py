@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 
-import torch
 from torchvision import datasets, transforms, models
 from torchvision.transforms import ToTensor
 
@@ -10,10 +9,11 @@ import matplotlib.pyplot as plt
 
 # Make device agnostic code. When we train on Colabs GPUs device will be cuda
 device = "cuda" if torch.cuda.is_available() else "cpu" 
+# print(device)
 
 # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
 # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
-model = models.resnet18(weights='DEFAULT')
+model = models.resnet18(weights='DEFAULT').to(device)
 #print(model)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(params=model.parameters(),
@@ -23,6 +23,7 @@ optimizer = torch.optim.SGD(params=model.parameters(),
 
 # TODO: Setup of Muon optimizer. Not as simple as optimizer = torch.optim.Muon(params=model.parameters(), lr=0.01) as it need 2D-parameters
 
+# TODO: The final layer is used for an output of 1000 classes due to the model's previous training. We need to figure out how to change that to 
 
 # Training the model
 epochs = 100
@@ -40,13 +41,14 @@ for epoch in range(epochs):
     optimizer.step()
 
 # Evaluating the model
-model.eval()
+with torch.no_grad():
+    model.eval()
 
-# TODO: Forward pass
+    # TODO: Forward pass
 
-# TODO: Calculate loss once we've figured out the paramameters to the loss function; test_loss = loss_fn(x, y)
+    # TODO: Calculate loss once we've figured out the paramameters to the loss function; test_loss = loss_fn(x, y)
 
-# TODO: Calculate accuracy; test_accuracy
+    # TODO: Calculate accuracy; test_accuracy
 
 # Uncomment this once loss and accuracy functions are implemented
 '''if epoch % 10 == 0:
