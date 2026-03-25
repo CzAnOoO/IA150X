@@ -10,13 +10,13 @@ from PIL import Image, ImageOps
 https://docs.h5py.org/en/3.5.0/quick.html
  """
 with h5py.File("data/brainTumorDataPublic_1766/1.mat", "r") as f:
-    """ Read .mat files in Python: https://codemia.io/knowledge-hub/path/read_mat_files_in_python """
+    # Read .mat files in Python: https://codemia.io/knowledge-hub/path/read_mat_files_in_python
     print(list(f.keys()))
 
     cjdata = f["cjdata"]
     print(list(cjdata.keys()))
 
-    """ https://medium.com/@gopiprasanthpotipireddy/using-mat-files-in-python-77293f995a43 """
+    # https://medium.com/@gopiprasanthpotipireddy/using-mat-files-in-python-77293f995a43
     img = np.array(f["/cjdata/image"])
     PID = np.array(f["/cjdata/PID"])
     label = np.array(f["/cjdata/label"]).item()
@@ -41,7 +41,7 @@ with h5py.File("data/brainTumorDataPublic_1766/1.mat", "r") as f:
     plt.title("Image && Mask")
     plt.imshow(iMg, cmap="gray")
 
-    # Cropping
+    # Cropping: https://www.askpython.com/python-modules/scipy/scipy-ndimage
     labeled_array, num_features = ndimage.label(iMg > 0)
 
     slice = ndimage.find_objects(labeled_array)
