@@ -15,6 +15,15 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
 model = models.resnet18(weights='DEFAULT').to(device)
 #print(model)
+
+# The model has a final layer, fc, which has out_features=1000: (fc): Linear(in_features=512, out_features=1000, bias=True). The dataset we use only has 
+# three categories --> three potential outputs in the final layer - cjdata.label: 1 for meningioma, 2 for glioma, 3 for pituitary tumor
+# The way to change the final fc-layer was found on https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
+# Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
+num_ftrs = model.fc.in_features
+model.fc = nn.Linear(num_ftrs, 3)
+print(model)
+
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(params=model.parameters(),
                             lr=0.01)
@@ -40,16 +49,16 @@ for epoch in range(epochs):
     # Once the loss can be calculated, we need backpropagation by using loss.backward()
     optimizer.step()
 
-# Evaluating the model
-with torch.no_grad():
-    model.eval()
+    # Evaluating the model
+    with torch.no_grad():
+        model.eval()
 
-    # TODO: Forward pass
+        # TODO: Forward pass
 
-    # TODO: Calculate loss once we've figured out the paramameters to the loss function; test_loss = loss_fn(x, y)
+        # TODO: Calculate loss once we've figured out the paramameters to the loss function; test_loss = loss_fn(x, y)
 
-    # TODO: Calculate accuracy; test_accuracy
+        # TODO: Calculate accuracy; test_accuracy
 
-# Uncomment this once loss and accuracy functions are implemented
-'''if epoch % 10 == 0:
-      print(f"Epoch: {epoch} | Loss: {loss:.5f}, Acc: {acc:.2f}% | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%")'''
+    # Uncomment this once loss and accuracy functions are implemented
+    '''if epoch % 10 == 0:
+        print(f"Epoch: {epoch} | Loss: {loss:.5f}, Acc: {acc:.2f}% | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%")'''
