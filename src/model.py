@@ -22,7 +22,6 @@ data_transform = transforms.Compose([
 ])
 
 # From section 4.
-# TODO: Turn into torch.utils.data.Dataset
 train_data = datasets.ImageFolder(root=train_dir, 
                                   transform=data_transform, 
                                   target_transform=None) 
@@ -31,7 +30,6 @@ test_data = datasets.ImageFolder(root=test_dir,
                                  transform=data_transform)
 
 # From section 4.1
-# TODO: Turn Dataset into torch.utils.data.DataLoader
 train_dataloader = DataLoader(dataset=train_data, 
                               batch_size=64, 
                               shuffle=True) 
