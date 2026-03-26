@@ -21,8 +21,18 @@ train_dir = project_root / "processed_dataset" / "train"
 test_dir = project_root / "processed_dataset" / "test"
 # Convert to tensors, from section 3.1
 data_transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.RandomHorizontalFlip(p=0.5)]
+    [
+        transforms.Grayscale(
+            num_output_channels=3
+        ),  # The data we have sorted out is a single-channel 8-bit grayscale png picture
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        ),  # https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
+    ]
 )
+
+# transforms.RandomHorizontalFlip(p=0.5) Random rotation may not necessarily be useful or even have negative effects on the brain tumor images we use
 
 # From section 4.
 train_data = datasets.ImageFolder(
@@ -63,31 +73,85 @@ optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
 
 # TODO: Setup of Muon optimizer. Not as simple as optimizer = torch.optim.Muon(params=model.parameters(), lr=0.01) as it need 2D-parameters
 
+
 # Training the model
-epochs = 100
+# From section 7.5
+def train_step(
+    model: torch.nn.Module,
+    dataloader: torch.utils.data.DataLoader,
+    loss_fn: torch.nn.Module,
+    optimizer: torch.optim.Optimizer,
+):
+    size = len(dataloader.dataset)
 
-for epoch in range(epochs):
+    # Put model in train mode
     model.train()
+    # Setup train loss and train accuracy values
+    train_loss, train_acc = 0, 0
 
-    # TODO: Figure out how to forward pass for ResNet
+    # Loop through data loader data batches
+    for batch, (X, y) in enumerate(dataloader):
+        # Send data to target device
+        X, y = X.to(device), y.to(device)
 
-    # loss = loss_fn(x,y) # <-- Needs an input and target, such as a X_test, y_test etc
-    # TODO: Write an accuracy funciton to see how the model improves on training data
+        # 1. Forward pass
+        y_pred = model(X)
+        # 2. Calculate  and accumulate loss
+        loss = loss_fn(y_pred, y)
+        train_loss += loss.item()
+        # 3. Optimizer zero grad
+        optimizer.zero_grad()
+        # 4. Loss backward
+        loss.backward()
+        # 5. Optimizer step
+        optimizer.step()
 
-    optimizer.zero_grad()
-    # Once the loss can be calculated, we need backpropagation by using loss.backward()
-    optimizer.step()
+        # Batch level
+        if batch % 10 == 0:
+            loss, current = loss.item(), batch * len(X)
+            print(f"loss: {loss: > 7f} [{current:>5d}/{size:>5d}]")
 
-    # Evaluating the model
-    with torch.no_grad():
-        model.eval()
+        # Calculate and accumulate accuracy metrics across all batches
+        y_pred_class = torch.argmax(torch.softmax(y_pred, dim=1), dim=1)
+        train_acc += (y_pred_class == y).sum().item() / len(y_pred)
 
-        # TODO: Forward pass
+    # Adjust metrics to get average loss and accuracy per batch
+    train_loss = train_loss / len(dataloader)
+    train_acc = train_acc / len(dataloader)
+    return train_loss, train_acc
 
-        # TODO: Calculate loss once we've figured out the paramameters to the loss function; test_loss = loss_fn(x, y)
 
-        # TODO: Calculate accuracy; test_accuracy
+""" ——————————————————— Test ——————————————————— """
+train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
 
-    # Uncomment this once loss and accuracy functions are implemented
-    """if epoch % 10 == 0:
-        print(f"Epoch: {epoch} | Loss: {loss:.5f}, Acc: {acc:.2f}% | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%")"""
+print("loss:", train_loss)
+print("acc:", train_acc)
+
+""" ———————————————————————————————————————————— """
+# epochs = 100
+
+# for epoch in range(epochs):
+#     model.train()
+
+#     # TODO: Figure out how to forward pass for ResNet
+
+#     # loss = loss_fn(x,y) # <-- Needs an input and target, such as a X_test, y_test etc
+#     # TODO: Write an accuracy funciton to see how the model improves on training data
+
+#     optimizer.zero_grad()
+#     # Once the loss can be calculated, we need backpropagation by using loss.backward()
+#     optimizer.step()
+
+#     # Evaluating the model
+#     with torch.no_grad():
+#         model.eval()
+
+#         # TODO: Forward pass
+
+#         # TODO: Calculate loss once we've figured out the paramameters to the loss function; test_loss = loss_fn(x, y)
+
+#         # TODO: Calculate accuracy; test_accuracy
+
+#     # Uncomment this once loss and accuracy functions are implemented
+#     """if epoch % 10 == 0:
+#         print(f"Epoch: {epoch} | Loss: {loss:.5f}, Acc: {acc:.2f}% | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%")"""
