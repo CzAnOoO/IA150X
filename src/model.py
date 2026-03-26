@@ -9,67 +9,92 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 # Make device agnostic code. When we train on Colabs GPUs device will be cuda
-device = "cuda" if torch.cuda.is_available() else "cpu"
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+elif torch.backends.mps.is_available():
+    device = torch.device("mps")  # It can be removed when benchmarking on the cloud
+else:
+    device = torch.device("cpu")
 # print(device)
 
-# See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
-project_root = Path(__file__).resolve().parent.parent
-# From section 2:
-# train_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\train" #TODO: Find out if there's a smart way to make this more dynamic
-train_dir = project_root / "processed_dataset" / "train"
-# test_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\test"
-test_dir = project_root / "processed_dataset" / "test"
-# Convert to tensors, from section 3.1
-data_transform = transforms.Compose(
-    [
-        transforms.Grayscale(
-            num_output_channels=3
-        ),  # The data we have sorted out is a single-channel 8-bit grayscale png picture
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        ),  # https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
-    ]
-)
 
-# transforms.RandomHorizontalFlip(p=0.5) Random rotation may not necessarily be useful or even have negative effects on the brain tumor images we use
+def get_dataloaders(batch_size: int = 64):
+    # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
+    project_root = Path(__file__).resolve().parent.parent
+    # From section 2:
+    # train_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\train" #TODO: Find out if there's a smart way to make this more dynamic
+    train_dir = project_root / "processed_dataset" / "train"
+    # test_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\test"
+    test_dir = project_root / "processed_dataset" / "test"
 
-# From section 4.
-train_data = datasets.ImageFolder(
-    root=train_dir, transform=data_transform, target_transform=None
-)
+    val_dir = project_root / "processed_dataset" / "val"
+    # Convert to tensors, from section 3.1
+    data_transform = transforms.Compose(
+        [
+            transforms.Grayscale(
+                num_output_channels=3
+            ),  # The data we have sorted out is a single-channel 8-bit grayscale png picture
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+            ),  # https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
+        ]
+    )
 
-test_data = datasets.ImageFolder(root=test_dir, transform=data_transform)
+    # transforms.RandomHorizontalFlip(p=0.5) Random rotation may not necessarily be useful or even have negative effects on the brain tumor images we use
 
-# class_names = train_data.classes
-# print(class_names)
-# class_dict = train_data.class_to_idx
-# print(class_dict)
-# print(len(train_data), len(test_data))
+    # From section 4.
+    train_data = datasets.ImageFolder(
+        root=train_dir, transform=data_transform, target_transform=None
+    )
 
-# From section 4.1
-train_dataloader = DataLoader(dataset=train_data, batch_size=64, shuffle=True)
+    test_data = datasets.ImageFolder(root=test_dir, transform=data_transform)
 
-test_dataloader = DataLoader(dataset=test_data, batch_size=64, shuffle=False)
+    val_data = datasets.ImageFolder(root=val_dir, transform=data_transform)
+
+    # class_names = train_data.classes
+    # print(class_names)
+    # class_dict = train_data.class_to_idx
+    # print(class_dict)
+    # print(len(train_data), len(test_data))
+
+    # From section 4.1
+    train_dataloader = DataLoader(
+        dataset=train_data, batch_size=batch_size, shuffle=True
+    )
+
+    test_dataloader = DataLoader(
+        dataset=test_data, batch_size=batch_size, shuffle=False
+    )
+
+    val_dataloader = DataLoader(
+        dataset=val_data, batch_size=batch_size, shuffle=False
+    )  # https://developers.google.com/machine-learning/crash-course/overfitting/dividing-datasets
+
+    return train_dataloader, test_dataloader, val_dataloader
 
 
-# Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
-# If we want to compare untrained, we simply leave it blank: model = models.resnet18()
-model = models.resnet18(weights="DEFAULT").to(device)
-# print(model)
+def get_model_opt_loss():  # May allow selecting optimizer via string
+    # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
+    # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
+    model = models.resnet18(weights="DEFAULT")
+    # print(model)
 
-# The model has a final layer, fc, which has out_features=1000: (fc): Linear(in_features=512, out_features=1000, bias=True). The dataset we use only has
-# three categories --> three potential outputs in the final layer - cjdata.label: 1 for meningioma, 2 for glioma, 3 for pituitary tumor
-# The way to change the final fc-layer was found on https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
-# Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
-num_ftrs = model.fc.in_features
-model.fc = nn.Linear(num_ftrs, 3)
-print(model)
+    # The model has a final layer, fc, which has out_features=1000: (fc): Linear(in_features=512, out_features=1000, bias=True). The dataset we use only has
+    # three categories --> three potential outputs in the final layer - cjdata.label: 1 for meningioma, 2 for glioma, 3 for pituitary tumor
+    # The way to change the final fc-layer was found on https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
+    # Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, 3)
+    # print(model)
 
-loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
-""" optimizer = torch.optim.Adam(params=model.parameters(),
-                            lr=0.01) """
+    model = model.to(device)
+
+    loss_fn = nn.CrossEntropyLoss()
+    """ optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01) """
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+    return model, optimizer, loss_fn
+
 
 # TODO: Setup of Muon optimizer. Not as simple as optimizer = torch.optim.Muon(params=model.parameters(), lr=0.01) as it need 2D-parameters
 
@@ -107,9 +132,9 @@ def train_step(
         optimizer.step()
 
         # Batch level
-        if batch % 10 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"loss: {loss: > 7f} [{current:>5d}/{size:>5d}]")
+        # if batch % 10 == 0:
+        #     batch_loss, current = loss.item(), batch * len(X)
+        #     print(f"loss: {batch_loss: > 7f} [{current:>5d}/{size:>5d}]")
 
         # Calculate and accumulate accuracy metrics across all batches
         y_pred_class = torch.argmax(torch.softmax(y_pred, dim=1), dim=1)
@@ -122,8 +147,10 @@ def train_step(
 
 
 """ ——————————————————— Test ——————————————————— """
-train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
+train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
+model, optimizer, loss_fn = get_model_opt_loss()
 
+train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
 print("loss:", train_loss)
 print("acc:", train_acc)
 
@@ -148,10 +175,10 @@ print("acc:", train_acc)
 
 #         # TODO: Forward pass
 
-#         # TODO: Calculate loss once we've figured out the paramameters to the loss function; test_loss = loss_fn(x, y)
+#         # TODO: Calculate loss once we've figured out the paramameters to the loss function; val_loss = loss_fn(x, y)
 
-#         # TODO: Calculate accuracy; test_accuracy
+#         # TODO: Calculate accuracy; val_accuracy
 
 #     # Uncomment this once loss and accuracy functions are implemented
 #     """if epoch % 10 == 0:
-#         print(f"Epoch: {epoch} | Loss: {loss:.5f}, Acc: {acc:.2f}% | Test loss: {test_loss:.5f}, Test acc: {test_acc:.2f}%")"""
+#         print(f"Epoch: {epoch} | Loss: {loss:.5f}, Acc: {acc:.2f}% | Test loss: {val_loss:.5f}, Test acc: {val_acc:.2f}%")"""
