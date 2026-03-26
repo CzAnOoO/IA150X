@@ -3,15 +3,43 @@ from torch import nn
 
 from torchvision import datasets, transforms, models
 from torchvision.transforms import ToTensor
+from torch.utils.data import DataLoader
 
 import matplotlib.pyplot as plt
-
-
-# TODO: Load the data - split up into training, testing. Read up on ImageFolder, DataLoader, and create data_transform. See https://www.learnpytorch.io/04_pytorch_custom_datasets/
 
 # Make device agnostic code. When we train on Colabs GPUs device will be cuda
 device = "cuda" if torch.cuda.is_available() else "cpu" 
 # print(device)
+
+# See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
+# From section 2:
+train_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\train" #TODO: Find out if there's a smart way to make this more dynamic
+test_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\test"
+# Convert to tensors, from section 3.1
+data_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.RandomHorizontalFlip(p=0.5)
+])
+
+# From section 4.
+# TODO: Turn into torch.utils.data.Dataset
+train_data = datasets.ImageFolder(root=train_dir, 
+                                  transform=data_transform, 
+                                  target_transform=None) 
+
+test_data = datasets.ImageFolder(root=test_dir, 
+                                 transform=data_transform)
+
+# From section 4.1
+# TODO: Turn Dataset into torch.utils.data.DataLoader
+train_dataloader = DataLoader(dataset=train_data, 
+                              batch_size=64, 
+                              shuffle=True) 
+
+test_dataloader = DataLoader(dataset=test_data, 
+                             batch_size=64,  
+                             shuffle=False) 
+
 
 # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
 # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
@@ -34,8 +62,6 @@ optimizer = torch.optim.SGD(params=model.parameters(),
 
 # TODO: Setup of Muon optimizer. Not as simple as optimizer = torch.optim.Muon(params=model.parameters(), lr=0.01) as it need 2D-parameters
 
-# TODO: The final layer is used for an output of 1000 classes due to the model's previous training. We need to figure out how to change that to 
-
 # Training the model
 epochs = 100
 
@@ -44,7 +70,7 @@ for epoch in range(epochs):
 
     # TODO: Figure out how to forward pass for ResNet
 
-    # loss = loss_fn(x,y) # <-- Needs an input and target. Figure out what x, y can be
+    # loss = loss_fn(x,y) # <-- Needs an input and target, such as a X_test, y_test etc
     # TODO: Write an accuracy funciton to see how the model improves on training data
 
     optimizer.zero_grad()
