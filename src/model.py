@@ -7,6 +7,8 @@ from torchvision.transforms import ToTensor
 import matplotlib.pyplot as plt
 
 
+# TODO: Load the data - split up into training, testing. Read up on ImageFolder, DataLoader, and create data_transform. See https://www.learnpytorch.io/04_pytorch_custom_datasets/
+
 # Make device agnostic code. When we train on Colabs GPUs device will be cuda
 device = "cuda" if torch.cuda.is_available() else "cpu" 
 # print(device)
