@@ -146,13 +146,106 @@ def train_step(
     return train_loss, train_acc
 
 
+def test_step(
+    model: torch.nn.Module,
+    dataloader: torch.utils.data.DataLoader,
+    loss_fn: torch.nn.Module,
+):
+    # Put model in eval mode
+    model.eval()
+    # Setup test loss and test accuracy values
+    val_loss, val_acc = 0, 0
+    # Turn on inference context manager
+    with torch.inference_mode():
+        # Loop through DataLoader batches
+        for batch, (X, y) in enumerate(dataloader):
+            # Send data to target device
+            X, y = X.to(device), y.to(device)
+            # 1. Forward pass
+            test_y_pred = model(X)
+            # 2. Calculate and accumulate loss
+            loss = loss_fn(test_y_pred, y)
+            val_loss += loss.item()
+
+            # Calculate and accumulate accuracy
+            test_pred_labels = test_y_pred.argmax(dim=1)
+            val_acc += (test_pred_labels == y).sum().item() / len(test_pred_labels)
+
+    # Adjust metrics to get average loss and accuracy per batch
+    val_loss = val_loss / len(dataloader)
+    val_acc = val_acc / len(dataloader)
+    return val_loss, val_acc
+
+
+def train(
+    model: torch.nn.Module,
+    train_dataloader: torch.utils.data.DataLoader,
+    # test_dataloader: torch.utils.data.DataLoader,
+    val_dataloader: torch.utils.data.DataLoader,
+    optimizer: torch.optim.Optimizer,
+    loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
+    epochs: int = 5,
+):
+
+    # 2. Create empty results dictionary
+    results = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
+
+    # 3. Loop through training and testing steps for a number of epochs
+    for epoch in range(epochs):
+        train_loss, train_acc = train_step(
+            model=model,
+            dataloader=train_dataloader,
+            loss_fn=loss_fn,
+            optimizer=optimizer,
+        )
+        val_loss, val_acc = test_step(
+            model=model, dataloader=val_dataloader, loss_fn=loss_fn
+        )
+
+        # 4. Print out what's happening
+        print(
+            f"Epoch: {epoch + 1} | "
+            f"train_loss: {train_loss:.4f} | "
+            f"train_acc: {train_acc:.4f} | "
+            f"val_loss: {val_loss:.4f} | "
+            f"val_acc: {val_acc:.4f}"
+        )
+
+        # 5. Update results dictionary
+        # Ensure all data is moved to CPU and converted to float for storage
+        # results["train_loss"].append(
+        #     train_loss.item() if isinstance(train_loss, torch.Tensor) else train_loss
+        # )
+        # results["train_acc"].append(
+        #     train_acc.item() if isinstance(train_acc, torch.Tensor) else train_acc
+        # )
+        # results["val_loss"].append(
+        #     val_loss.item() if isinstance(val_loss, torch.Tensor) else val_loss
+        # )
+        # results["val_acc"].append(
+        #     val_acc.item() if isinstance(val_acc, torch.Tensor) else val_acc
+        # )
+
+    # 6. Return the filled results at the end of the epochs
+    return results
+
+
 """ ——————————————————— Test ——————————————————— """
 train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
 model, optimizer, loss_fn = get_model_opt_loss()
 
-train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
-print("loss:", train_loss)
-print("acc:", train_acc)
+# train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
+# print("loss:", train_loss)
+# print("acc:", train_acc)
+
+train(
+    model=model,
+    train_dataloader=train_dataloader,
+    val_dataloader=val_dataloader,
+    loss_fn=loss_fn,
+    optimizer=optimizer,
+    epochs=10,
+)
 
 """ ———————————————————————————————————————————— """
 # epochs = 100
