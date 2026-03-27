@@ -15,7 +15,7 @@ elif torch.backends.mps.is_available():
     device = torch.device("mps")  # It can be removed when benchmarking on the cloud
 else:
     device = torch.device("cpu")
-# print(device)
+print(device)
 
 
 def get_dataloaders(batch_size: int = 64):
@@ -38,6 +38,7 @@ def get_dataloaders(batch_size: int = 64):
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
             ),  # https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
+            # transforms.RandomHorizontalFlip(p=0.5)
         ]
     )
 
@@ -91,8 +92,8 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     model = model.to(device)
 
     loss_fn = nn.CrossEntropyLoss()
-    """ optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01) """
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
+    optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
+    # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
     return model, optimizer, loss_fn
 
 
