@@ -22,9 +22,7 @@ def get_dataloaders(batch_size: int = 64):
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
-    # train_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\train" #TODO: Find out if there's a smart way to make this more dynamic
     train_dir = project_root / "processed_dataset" / "train"
-    # test_dir = r"C:\Users\mikae\Documents\Exjobb\IA150X\processed_dataset\test"
     test_dir = project_root / "processed_dataset" / "test"
 
     val_dir = project_root / "processed_dataset" / "val"
@@ -74,6 +72,20 @@ def get_dataloaders(batch_size: int = 64):
 
     return train_dataloader, test_dataloader, val_dataloader
 
+# TODO: Setup of Muon optimizer. Not as simple as optimizer = torch.optim.Muon(params=model.parameters(), lr=0.01) as it need 2D-parameters
+# Tried with this function to separate the parameters, but decided to simply move it into the get_model_opt_loss-function
+''' def separate_params():
+    # This needs work. Practically pseudo code right now
+    muon_params = []
+    first_order_params = []
+    # Separating >= 2D-tensors that will be used by Muon, and 1D-tensors used by Adam/SGD
+    for param in model.parameters():
+        if param.ndim >= 2:
+            muon_params.append(param)
+        else:
+            first_order_params.append(param)
+    
+    return muon_params, first_order_params'''
 
 def get_model_opt_loss():  # May allow selecting optimizer via string
     # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
@@ -87,17 +99,27 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     # Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 3)
-    # print(model)
+    print(model)
+
+    muon_params = []
+    first_order_params = []
+    # Separating >= 2D-tensors that will be used by Muon, and 1D-tensors used by Adam/SGD. TODO: Double check the logic for param.ndim == 4. Should perhaps be appended to muon_params?
+    for param in model.parameters():
+        if param.ndim == 2:
+            muon_params.append(param)
+        elif param.ndim == 4:
+            param.view(param.shape[0], -1) # Flatten all but first dim, solution from https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb. Possibly not wise to have this in the for-loop
+        else:
+            first_order_params.append(param)
 
     model = model.to(device)
 
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
+    # optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
     # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
-    return model, optimizer, loss_fn
-
-
-# TODO: Setup of Muon optimizer. Not as simple as optimizer = torch.optim.Muon(params=model.parameters(), lr=0.01) as it need 2D-parameters
+    second_order_optimizer = torch.optim.Muon(params=muon_params, lr=0.01)
+    first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
+    return model, loss_fn, first_order_optimizer, second_order_optimizer #, optimizer
 
 
 # Training the model
@@ -106,7 +128,9 @@ def train_step(
     model: torch.nn.Module,
     dataloader: torch.utils.data.DataLoader,
     loss_fn: torch.nn.Module,
-    optimizer: torch.optim.Optimizer,
+    # optimizer: torch.optim.Optimizer,
+    first_order_optimizer: torch.optim.Optimizer,
+    second_order_optimizer: torch.optim.Optimizer
 ):
     size = len(dataloader.dataset)
 
@@ -126,11 +150,15 @@ def train_step(
         loss = loss_fn(y_pred, y)
         train_loss += loss.item()
         # 3. Optimizer zero grad
-        optimizer.zero_grad()
+        # optimizer.zero_grad()
+        first_order_optimizer.zero_grad()
+        second_order_optimizer.zero_grad()
         # 4. Loss backward
         loss.backward()
         # 5. Optimizer step
-        optimizer.step()
+        # optimizer.step()
+        first_order_optimizer.step()
+        second_order_optimizer.step()
 
         # Batch level
         # if batch % 10 == 0:
@@ -183,7 +211,9 @@ def train(
     train_dataloader: torch.utils.data.DataLoader,
     # test_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
-    optimizer: torch.optim.Optimizer,
+    # optimizer: torch.optim.Optimizer,
+    first_order_optimizer = torch.optim.Optimizer,
+    second_order_optimizer = torch.optim.Optimizer,
     loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
     epochs: int = 5,
 ):
@@ -197,7 +227,9 @@ def train(
             model=model,
             dataloader=train_dataloader,
             loss_fn=loss_fn,
-            optimizer=optimizer,
+            #optimizer=optimizer,
+            first_order_optimizer=first_order_optimizer,
+            second_order_optimizer=second_order_optimizer
         )
         val_loss, val_acc = test_step(
             model=model, dataloader=val_dataloader, loss_fn=loss_fn
@@ -233,18 +265,20 @@ def train(
 
 """ ——————————————————— Test ——————————————————— """
 train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
-model, optimizer, loss_fn = get_model_opt_loss()
+model, loss_fn, first_order_optimizer, second_order_optimizer = get_model_opt_loss()
 
 # train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
 # print("loss:", train_loss)
 # print("acc:", train_acc)
 
-train(
+train(  # should this still be called train or do we name it def test?
     model=model,
-    train_dataloader=train_dataloader,
+    train_dataloader=train_dataloader, # Since this is in the test-part, should we have test_dataloader?
     val_dataloader=val_dataloader,
     loss_fn=loss_fn,
-    optimizer=optimizer,
+    #optimizer=optimizer,
+    first_order_optimizer=first_order_optimizer,
+    second_order_optimizer=second_order_optimizer,
     epochs=10,
 )
 
