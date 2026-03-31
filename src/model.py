@@ -122,7 +122,10 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     #     else:
     #         first_order_params.append(param)
 
-    for param in model.parameters():
+    for name, param in model.named_parameters():
+        if "fc" in name or "conv1" in name:  # Jordan's advice
+            first_order_params.append(param)
+            continue
         if param.ndim >= 2:
             muon_params.append(param)
         else:
