@@ -99,16 +99,17 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     # Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 3)
-    print(model)
+    # print(model)
 
     muon_params = []
     first_order_params = []
     # Separating >= 2D-tensors that will be used by Muon, and 1D-tensors used by Adam/SGD. TODO: Double check the logic for param.ndim == 4. Should perhaps be appended to muon_params?
     for param in model.parameters():
-        if param.ndim == 2:
+        if param.ndim >= 2:
             muon_params.append(param)
-        elif param.ndim == 4:
-            param.view(param.shape[0], -1) # Flatten all but first dim, solution from https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb. Possibly not wise to have this in the for-loop
+        #elif param.ndim > 2:
+            #flatten = param.view(param.shape[0], -1) # Flatten all but first dim, solution from https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb. Possibly not wise to have this in the for-loop
+            #muon_params.append(flatten) <-- Incorrect. This solution gives ValueError: can't optimize a non-leaf tensor. The flattening needs to happen in the .step()
         else:
             first_order_params.append(param)
 
@@ -119,6 +120,10 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
     second_order_optimizer = torch.optim.Muon(params=muon_params, lr=0.01)
     first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
+
+    print(model)
+    print(muon_params)
+    print(first_order_params)
     return model, loss_fn, first_order_optimizer, second_order_optimizer #, optimizer
 
 
