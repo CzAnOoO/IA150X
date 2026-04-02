@@ -24,7 +24,7 @@ else:
 print(device)
 
 
-def get_dataloaders(batch_size: int = 64):
+def get_dataloaders(batch_size: int = 32): # changed from 64 to 32
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
