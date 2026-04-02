@@ -8,9 +8,11 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from muon import (
-    SingleDeviceMuonWithAuxAdam,
-)  # https://github.com/KellerJordan/Muon/tree/master
+# from muon import (
+#     SingleDeviceMuonWithAuxAdam,
+# ) # https://github.com/KellerJordan/Muon/tree/master
+
+from muon_modified import Muon
 
 # Make device agnostic code. When we train on Colabs GPUs device will be cuda
 if torch.cuda.is_available():
@@ -132,7 +134,7 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
             first_order_params.append(param)
 
     # Muon implementation by keller Jordan https://github.com/KellerJordan/Muon/tree/master
-    param_groups = [
+    """ param_groups = [
         dict(params=muon_params, use_muon=True, lr=0.02, weight_decay=0.01),
         dict(
             params=first_order_params,
@@ -141,28 +143,29 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
             betas=(0.9, 0.95),
             weight_decay=0.01,
         ),
-    ]
+    ] """
 
     loss_fn = nn.CrossEntropyLoss()
     # optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
     # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
     # second_order_optimizer = torch.optim.Muon(params=muon_params, lr=0.01)
-    # first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
+    second_order_optimizer = Muon(params=muon_params)
+    first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
 
-    optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
+    # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
 
-    return model, loss_fn, optimizer  # , optimizer
+    return model, loss_fn, first_order_optimizer, second_order_optimizer  # , optimizer
 
 
 # Training the model
-# From section 7.5
+# ------- From section 7.5 -----------
 def train_step(
     model: torch.nn.Module,
     dataloader: torch.utils.data.DataLoader,
     loss_fn: torch.nn.Module,
-    optimizer: torch.optim.Optimizer,
-    # first_order_optimizer: torch.optim.Optimizer,
-    # second_order_optimizer: torch.optim.Optimizer,
+    # optimizer: torch.optim.Optimizer,
+    first_order_optimizer: torch.optim.Optimizer,
+    second_order_optimizer: torch.optim.Optimizer,
 ):
     size = len(dataloader.dataset)
 
@@ -182,17 +185,17 @@ def train_step(
         loss = loss_fn(y_pred, y)
         train_loss += loss.item()
         # 3. Optimizer zero grad
-        optimizer.zero_grad()
-        # first_order_optimizer.zero_grad()
-        # second_order_optimizer.zero_grad()
+        # optimizer.zero_grad()
+        first_order_optimizer.zero_grad()
+        second_order_optimizer.zero_grad()
 
         # 4. Loss backward
         loss.backward()
 
         # 5. Optimizer step
-        optimizer.step()
-        # first_order_optimizer.step()
-        # second_order_optimizer.step()
+        # optimizer.step()
+        first_order_optimizer.step()
+        second_order_optimizer.step()
 
         # Batch level
         # if batch % 10 == 0:
@@ -245,9 +248,9 @@ def train(
     train_dataloader: torch.utils.data.DataLoader,
     # test_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
-    optimizer: torch.optim.Optimizer,
-    # first_order_optimizer=torch.optim.Optimizer,
-    # second_order_optimizer=torch.optim.Optimizer,
+    # optimizer: torch.optim.Optimizer,
+    first_order_optimizer=torch.optim.Optimizer,
+    second_order_optimizer=torch.optim.Optimizer,
     loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
     epochs: int = 5,
 ):
@@ -261,9 +264,9 @@ def train(
             model=model,
             dataloader=train_dataloader,
             loss_fn=loss_fn,
-            optimizer=optimizer,
-            # first_order_optimizer=first_order_optimizer,
-            # second_order_optimizer=second_order_optimizer,
+            # optimizer=optimizer,
+            first_order_optimizer=first_order_optimizer,
+            second_order_optimizer=second_order_optimizer,
         )
         val_loss, val_acc = test_step(
             model=model, dataloader=val_dataloader, loss_fn=loss_fn
@@ -277,30 +280,15 @@ def train(
             f"val_loss: {val_loss:.4f} | "
             f"val_acc: {val_acc:.4f}"
         )
-
-        # 5. Update results dictionary
-        # Ensure all data is moved to CPU and converted to float for storage
-        # results["train_loss"].append(
-        #     train_loss.item() if isinstance(train_loss, torch.Tensor) else train_loss
-        # )
-        # results["train_acc"].append(
-        #     train_acc.item() if isinstance(train_acc, torch.Tensor) else train_acc
-        # )
-        # results["val_loss"].append(
-        #     val_loss.item() if isinstance(val_loss, torch.Tensor) else val_loss
-        # )
-        # results["val_acc"].append(
-        #     val_acc.item() if isinstance(val_acc, torch.Tensor) else val_acc
-        # )
-
-    # 6. Return the filled results at the end of the epochs
     return results
 
 
+# ------------------------------------
+
 """ ——————————————————— Test ——————————————————— """
 train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
-model, loss_fn, optimizer = get_model_opt_loss()
-# model, loss_fn, first_order_optimizer, second_order_optimizer = get_model_opt_loss()
+# model, loss_fn, optimizer = get_model_opt_loss()
+model, loss_fn, first_order_optimizer, second_order_optimizer = get_model_opt_loss()
 
 # train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
 # print("loss:", train_loss)
@@ -311,10 +299,10 @@ train(  # should this still be called train or do we name it def test?
     train_dataloader=train_dataloader,  # Since this is in the test-part, should we have test_dataloader?
     val_dataloader=val_dataloader,
     loss_fn=loss_fn,
-    optimizer=optimizer,
-    # first_order_optimizer=first_order_optimizer,
-    # second_order_optimizer=second_order_optimizer,
-    epochs=12,
+    # optimizer=optimizer,
+    first_order_optimizer=first_order_optimizer,
+    second_order_optimizer=second_order_optimizer,
+    epochs=5,
 )
 
 """ ———————————————————————————————————————————— """
