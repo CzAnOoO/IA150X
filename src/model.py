@@ -252,7 +252,7 @@ def train(
     first_order_optimizer=torch.optim.Optimizer,
     second_order_optimizer=torch.optim.Optimizer,
     loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
-    epochs: int = 5,
+    epochs: int = 30,
 ):
 
     # 2. Create empty results dictionary
@@ -302,7 +302,7 @@ train(  # should this still be called train or do we name it def test?
     # optimizer=optimizer,
     first_order_optimizer=first_order_optimizer,
     second_order_optimizer=second_order_optimizer,
-    epochs=5,
+    epochs=30,
 )
 
 """ ———————————————————————————————————————————— """
