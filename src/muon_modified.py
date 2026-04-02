@@ -101,7 +101,7 @@ class Muon(Optimizer):
     def __init__(
         self,
         params: ParamsT,
-        lr: float = 1e-3,
+        lr: float = 1e-4, # testing with decreasing from 1e-3
         weight_decay: float = 0.1,
         momentum: float = 0.95,
         nesterov: bool = True,
