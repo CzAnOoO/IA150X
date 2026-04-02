@@ -106,7 +106,7 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     # The way to change the final fc-layer was found on https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
     # Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
     num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, 3)
+    model.fc = nn.Sequential(nn.Dropout(0.5), nn.Linear(num_ftrs, 3)) # changed from nn.Linear(num_ftrs, 3)
     model = model.to(device)
 
     # print(model)
