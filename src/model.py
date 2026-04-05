@@ -14,7 +14,7 @@ from pathlib import Path
 
 from muon_modified import Muon
 
-# Set the manual seeds
+# Set the manual seeds - UPDATE: This does not affect to output
 torch.manual_seed(42)
 torch.cuda.manual_seed(42) # Attempt to get the same result each run. From section 3.4 https://www.learnpytorch.io/06_pytorch_transfer_learning/
 
@@ -50,8 +50,8 @@ def get_dataloaders(batch_size: int = 16):
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
             ),  # https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
-            # transforms.RandomHorizontalFlip(p=0.5),
-            # transforms.RandomRotation(10)
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomRotation(10)
         ]
     )
 
