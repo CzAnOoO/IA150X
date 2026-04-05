@@ -14,6 +14,10 @@ from pathlib import Path
 
 from muon_modified import Muon
 
+# Set the manual seeds
+torch.manual_seed(42)
+torch.cuda.manual_seed(42) # Attempt to get the same result each run. From section 3.4 https://www.learnpytorch.io/06_pytorch_transfer_learning/
+
 # Make device agnostic code. When we train on Colabs GPUs device will be cuda
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -100,11 +104,7 @@ def get_dataloaders(batch_size: int = 16):
     return muon_params, first_order_params"""
 
 
-def get_model_opt_loss():  # May allow selecting optimizer via string
-    # Set the manual seeds
-    torch.manual_seed(42)
-    torch.cuda.manual_seed(42) # Attempt to get the same result each run. From section 3.4 https://www.learnpytorch.io/06_pytorch_transfer_learning/
-    
+def get_model_opt_loss():  # May allow selecting optimizer via string   
     # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
     # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
     # model = models.resnet18(weights="DEFAULT")
