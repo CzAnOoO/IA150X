@@ -50,8 +50,8 @@ def get_dataloaders(batch_size: int = 16):
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
             ),  # https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomRotation(10)
+            # transforms.RandomHorizontalFlip(p=0.5),
+            # transforms.RandomRotation(10)
         ]
     )
 
