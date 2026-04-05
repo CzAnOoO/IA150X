@@ -101,6 +101,10 @@ def get_dataloaders(batch_size: int = 16):
 
 
 def get_model_opt_loss():  # May allow selecting optimizer via string
+    # Set the manual seeds
+    torch.manual_seed(42)
+    torch.cuda.manual_seed(42) # Attempt to get the same result each run. From section 3.4 https://www.learnpytorch.io/06_pytorch_transfer_learning/
+    
     # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
     # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
     # model = models.resnet18(weights="DEFAULT")
