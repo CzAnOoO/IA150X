@@ -24,14 +24,18 @@ else:
 print(device)
 
 
-def get_dataloaders(batch_size: int = 64):
+def get_dataloaders(batch_size: int = 16):
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
-    train_dir = project_root / "processed_dataset" / "train"
-    test_dir = project_root / "processed_dataset" / "test"
+    # train_dir = project_root / "processed_dataset" / "train"
+    # test_dir = project_root / "processed_dataset" / "test"
+    # val_dir = project_root / "processed_dataset" / "val"
 
-    val_dir = project_root / "processed_dataset" / "val"
+    train_dir = project_root / "original_dataset" / "train"
+    test_dir = project_root / "original_dataset" / "test"
+    val_dir = project_root / "original_dataset" / "val"
+
     # Convert to tensors, from section 3.1
     data_transform = transforms.Compose(
         [
@@ -98,7 +102,8 @@ def get_dataloaders(batch_size: int = 64):
 def get_model_opt_loss():  # May allow selecting optimizer via string
     # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
     # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
-    model = models.resnet18(weights="DEFAULT")
+    # model = models.resnet18(weights="DEFAULT")
+    model = models.resnet18(weights=None)
     # print(model)
 
     # The model has a final layer, fc, which has out_features=1000: (fc): Linear(in_features=512, out_features=1000, bias=True). The dataset we use only has
@@ -149,7 +154,12 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     # optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
     # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
     # second_order_optimizer = torch.optim.Muon(params=muon_params, lr=0.01)
-    second_order_optimizer = Muon(params=muon_params)
+    second_order_optimizer = Muon(
+        params=muon_params,
+        lr=0.001,
+        # weight_decay=0.2,
+        # momentum=0.7,
+    )
     first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
 
     # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
@@ -302,7 +312,7 @@ train(  # should this still be called train or do we name it def test?
     # optimizer=optimizer,
     first_order_optimizer=first_order_optimizer,
     second_order_optimizer=second_order_optimizer,
-    epochs=5,
+    epochs=15,
 )
 
 """ ———————————————————————————————————————————— """
