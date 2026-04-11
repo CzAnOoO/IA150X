@@ -115,7 +115,11 @@ def get_model_opt_loss(
     # The way to change the final fc-layer was found on https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
     # Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
     num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, 3)
+    # model.fc = nn.Linear(num_ftrs, 3)
+    model.fc = nn.Sequential(  # https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
+        nn.Dropout(0.5),
+        nn.Linear(num_ftrs, 3),
+    )
     model = model.to(device)
 
     loss_fn = nn.CrossEntropyLoss()
@@ -308,24 +312,24 @@ def train(
 # ------------------------------------
 
 """ ——————————————————— Test ——————————————————— """
-train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
-# model, loss_fn, optimizer = get_model_opt_loss()
-model, loss_fn, optimizers = get_model_opt_loss(opt_name="muon", pretrain=False)
+# train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
+# # model, loss_fn, optimizer = get_model_opt_loss()
+# model, loss_fn, optimizers = get_model_opt_loss(opt_name="muon", pretrain=False)
 
-# train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
-# print("loss:", train_loss)
-# print("acc:", train_acc)
+# # train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
+# # print("loss:", train_loss)
+# # print("acc:", train_acc)
 
-train(  # should this still be called train or do we name it def test?
-    model=model,
-    train_dataloader=train_dataloader,  # Since this is in the test-part, should we have test_dataloader?
-    val_dataloader=val_dataloader,
-    loss_fn=loss_fn,
-    optimizers=optimizers,
-    # first_order_optimizer=first_order_optimizer,
-    # second_order_optimizer=second_order_optimizer,
-    epochs=15,
-)
+# train(  # should this still be called train or do we name it def test?
+#     model=model,
+#     train_dataloader=train_dataloader,  # Since this is in the test-part, should we have test_dataloader?
+#     val_dataloader=val_dataloader,
+#     loss_fn=loss_fn,
+#     optimizers=optimizers,
+#     # first_order_optimizer=first_order_optimizer,
+#     # second_order_optimizer=second_order_optimizer,
+#     epochs=15,
+# )
 
 """ ———————————————————————————————————————————— """
 # epochs = 100

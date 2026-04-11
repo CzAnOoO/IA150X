@@ -12,5 +12,5 @@ m.train(  # should this still be called train or do we name it def test?
     optimizers=optimizers,
     # first_order_optimizer=first_order_optimizer,
     # second_order_optimizer=second_order_optimizer,
-    epochs=15,
+    epochs=10,
 )
