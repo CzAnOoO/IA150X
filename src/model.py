@@ -166,10 +166,11 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
         # momentum=0.7,
     )
     first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
-
+    #optimizer = torch.optim.Adam(params=params, lr=0.0003)
     # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
 
-    return model, loss_fn, first_order_optimizer, second_order_optimizer  # , optimizer
+    return model, loss_fn, first_order_optimizer, second_order_optimizer
+    #return model, loss_fn, optimizer
 
 
 # Training the model
@@ -178,7 +179,7 @@ def train_step(
     model: torch.nn.Module,
     dataloader: torch.utils.data.DataLoader,
     loss_fn: torch.nn.Module,
-    # optimizer: torch.optim.Optimizer,
+    #optimizer: torch.optim.Optimizer,
     first_order_optimizer: torch.optim.Optimizer,
     second_order_optimizer: torch.optim.Optimizer,
 ):
@@ -200,7 +201,7 @@ def train_step(
         loss = loss_fn(y_pred, y)
         train_loss += loss.item()
         # 3. Optimizer zero grad
-        # optimizer.zero_grad()
+        #optimizer.zero_grad()
         first_order_optimizer.zero_grad()
         second_order_optimizer.zero_grad()
 
@@ -208,7 +209,7 @@ def train_step(
         loss.backward()
 
         # 5. Optimizer step
-        # optimizer.step()
+        #optimizer.step()
         first_order_optimizer.step()
         second_order_optimizer.step()
 
@@ -263,7 +264,7 @@ def train(
     train_dataloader: torch.utils.data.DataLoader,
     # test_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
-    # optimizer: torch.optim.Optimizer,
+    #optimizer: torch.optim.Optimizer,
     first_order_optimizer=torch.optim.Optimizer,
     second_order_optimizer=torch.optim.Optimizer,
     loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
@@ -279,7 +280,7 @@ def train(
             model=model,
             dataloader=train_dataloader,
             loss_fn=loss_fn,
-            # optimizer=optimizer,
+            #optimizer=optimizer,
             first_order_optimizer=first_order_optimizer,
             second_order_optimizer=second_order_optimizer,
         )
@@ -307,7 +308,7 @@ def train(
 
 """ ——————————————————— Test ——————————————————— """
 train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
-# model, loss_fn, optimizer = get_model_opt_loss()
+#model, loss_fn, optimizer = get_model_opt_loss()
 model, loss_fn, first_order_optimizer, second_order_optimizer = get_model_opt_loss()
 
 # train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
@@ -319,14 +320,17 @@ optim_results = train(  # trying to store this as a variable to be used for the 
     train_dataloader=train_dataloader,
     val_dataloader=val_dataloader,
     loss_fn=loss_fn,
-    # optimizer=optimizer,
+    #optimizer=optimizer,
     first_order_optimizer=first_order_optimizer,
     second_order_optimizer=second_order_optimizer,
-    epochs=5, # chanign from 15 o 5 just when testing for plots
+    epochs=15,
 )
 print(f"Number of values in val_loss: {len(optim_results['val_loss'])}")
 plt.figure(figsize=(12, 5))
 plt.plot(optim_results["val_loss"])
+plt.xlabel("Epoch")
+plt.ylabel("Val Loss")
+plt.title("Loss vs Epoch for the Muon + Adam Optimizers")
 plt.show()
 
 """ ———————————————————————————————————————————— """
