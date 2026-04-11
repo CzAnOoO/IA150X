@@ -309,9 +309,9 @@ model, loss_fn, first_order_optimizer, second_order_optimizer = get_model_opt_lo
 # print("loss:", train_loss)
 # print("acc:", train_acc)
 
-train(  # should this still be called train or do we name it def test?
+optim_results = train(  # trying to store this as a variable to be used for the plot
     model=model,
-    train_dataloader=train_dataloader,  # Since this is in the test-part, should we have test_dataloader?
+    train_dataloader=train_dataloader,
     val_dataloader=val_dataloader,
     loss_fn=loss_fn,
     # optimizer=optimizer,
@@ -319,6 +319,8 @@ train(  # should this still be called train or do we name it def test?
     second_order_optimizer=second_order_optimizer,
     epochs=15,
 )
+plt.figure(figsize=(12, 5))
+plt.plot(optim_results["val_loss"])
 
 """ ———————————————————————————————————————————— """
 # epochs = 100
