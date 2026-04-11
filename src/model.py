@@ -331,7 +331,8 @@ plt.plot(optim_results["val_loss"], color="r", label="val_loss")
 plt.plot(optim_results["val_acc"], color="g", label="val_acc")
 plt.xlabel("Epoch")
 plt.ylabel("Val")
-plt.title("Loss & Acc vs Epoch for the Muon + Adam Optimizers")
+plt.title("Loss & Accuracy vs Epoch for the Muon + Adam Optimizers")
+plt.legend()
 plt.show()
 
 """ ———————————————————————————————————————————— """
