@@ -322,7 +322,7 @@ optim_results = train(  # trying to store this as a variable to be used for the 
     # optimizer=optimizer,
     first_order_optimizer=first_order_optimizer,
     second_order_optimizer=second_order_optimizer,
-    epochs=15,
+    epochs=5, # chanign from 15 o 5 just when testing for plots
 )
 print(f"Number of values in val_loss: {len(optim_results['val_loss'])}")
 plt.figure(figsize=(12, 5))
