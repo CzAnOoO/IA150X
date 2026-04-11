@@ -327,10 +327,10 @@ optim_results = train(  # trying to store this as a variable to be used for the 
 )
 print(f"Number of values in val_loss: {len(optim_results['val_loss'])}")
 plt.figure(figsize=(12, 5))
-plt.plot(optim_results["val_loss"])
+plt.plot(optim_results["val_loss"], optim_results["val_acc"])
 plt.xlabel("Epoch")
-plt.ylabel("Val Loss")
-plt.title("Loss vs Epoch for the Muon + Adam Optimizers")
+plt.ylabel("Val")
+plt.title("Loss & Acc vs Epoch for the Muon + Adam Optimizers")
 plt.show()
 
 """ ———————————————————————————————————————————— """
