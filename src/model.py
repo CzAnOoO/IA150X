@@ -295,6 +295,11 @@ def train(
             f"val_loss: {val_loss:.4f} | "
             f"val_acc: {val_acc:.4f}"
         )
+        # Append to the results list. Will be used when plotting
+        results["train_loss"].append(train_loss)
+        results["train_acc"].append(train_acc)
+        results["val_loss"].append(val_loss)
+        results["val_acc"].append(val_acc)
     return results
 
 
