@@ -2,8 +2,9 @@ import model as m
 import matplotlib.pyplot as plt
 
 train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=32)
+opt_in_use = "muon"
 # model, loss_fn, optimizer = get_model_opt_loss()
-model, loss_fn, optimizers = m.get_model_opt_loss(opt_name="sgd", pretrain=False)
+model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=opt_in_use, pretrain=False)
 
 optim_results = m.train(
     model=model,
@@ -21,6 +22,6 @@ plt.plot(optim_results["val_loss"], color="r", label="val_loss")
 plt.plot(optim_results["val_acc"], color="g", label="val_acc")
 plt.xlabel("Epoch")
 plt.ylabel("Val")
-plt.title(f"Loss & Accuracy vs Epoch for the SGD Optimizer")
+plt.title(f"Loss & Accuracy vs Epoch for the {opt_in_use} Optimizer")
 plt.legend()
 plt.show()
