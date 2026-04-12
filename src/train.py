@@ -30,7 +30,7 @@ for optim in optimizer_used:
     print(f"Execution Time for {optim}: {execution_time:.2f} seconds")
 
 # Plot validation loss for all three optimizers
-plt.figure(figsize=(12, 5))
+plt.figure(figsize=(6, 5))
 plt.subplot(1, 2, 1)
 for optim, results in all_results.items():
     plt.plot(results["val_loss"], label=f"{optim} Loss", marker="o") # https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb 
