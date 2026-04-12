@@ -330,9 +330,9 @@ def train(
 # # print("loss:", train_loss)
 # # print("acc:", train_acc)
 
-# train(  # should this still be called train or do we name it def test?
+# train( 
 #     model=model,
-#     train_dataloader=train_dataloader,  # Since this is in the test-part, should we have test_dataloader?
+#     train_dataloader=train_dataloader,
 #     val_dataloader=val_dataloader,
 #     loss_fn=loss_fn,
 #     optimizers=optimizers,
