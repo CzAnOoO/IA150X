@@ -1,6 +1,6 @@
 import model as m
 import matplotlib.pyplot as plt
-import time
+import time # https://www.educative.io/answers/how-to-measure-elapsed-time-in-python
 
 train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=32)
 #opt_in_use = "adam"
@@ -26,12 +26,13 @@ for optim in optimizer_used:
     )
     all_results[optim] = optim_results
     stop_time = time.time()
-    print("Execution Time for {optim}", stop_time - start_time)
+    execution_time = stop_time - start_time
+    print(f"Execution Time for {optim}: {execution_time:.2f} seconds") # https://www.geeksforgeeks.org/python/how-to-get-two-decimal-places-in-python/
 
 
 plt.figure(figsize=(12, 5))
 for optim, results in all_results.items():
-    plt.plot(results["val_loss"], label=f"{optim} Loss", marker="o")
+    plt.plot(results["val_loss"], label=f"{optim} Loss", marker="o") # https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb 
 #plt.plot(optim_results["val_loss"], color="r", label="val_loss")
 #plt.plot(optim_results["val_acc"], color="g", label="val_acc")
 plt.xlabel("Epoch")
