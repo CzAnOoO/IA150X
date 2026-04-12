@@ -27,10 +27,11 @@ for optim in optimizer_used:
     all_results[optim] = optim_results
     stop_time = time.time()
     execution_time = stop_time - start_time
-    print(f"Execution Time for {optim}: {execution_time:.2f} seconds") # https://www.geeksforgeeks.org/python/how-to-get-two-decimal-places-in-python/
+    print(f"Execution Time for {optim}: {execution_time:.2f} seconds")
 
-
+# Plot validation loss for all three optimizers
 plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
 for optim, results in all_results.items():
     plt.plot(results["val_loss"], label=f"{optim} Loss", marker="o") # https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb 
 #plt.plot(optim_results["val_loss"], color="r", label="val_loss")
@@ -38,6 +39,19 @@ for optim, results in all_results.items():
 plt.xlabel("Epoch")
 plt.ylabel("Validation Loss")
 plt.title(f"Validation Loss vs Epoch for the SGD, Adam, and Muon Optimizers")
+plt.grid(True) 
+plt.legend()
+plt.show()
+
+# Plot accuracy for all three optimizers: https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb & https://www.w3schools.com/python/matplotlib_subplot.asp
+plt.subplot(1, 2, 2)
+for optim, results in all_results.items():
+    plt.plot(results["val_acc"], label=f"{optim} Accuracy", marker="o") 
+#plt.plot(optim_results["val_loss"], color="r", label="val_loss")
+#plt.plot(optim_results["val_acc"], color="g", label="val_acc")
+plt.xlabel("Epoch")
+plt.ylabel("Validation Accuracy")
+plt.title(f"Validation Accuracy vs Epoch for the SGD, Adam, and Muon Optimizers")
 plt.grid(True) 
 plt.legend()
 plt.show()
