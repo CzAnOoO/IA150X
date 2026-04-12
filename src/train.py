@@ -2,7 +2,6 @@ import model as m
 import matplotlib.pyplot as plt
 import time # https://www.educative.io/answers/how-to-measure-elapsed-time-in-python
 
-train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=32)
 #opt_in_use = "adam"
 # model, loss_fn, optimizer = get_model_opt_loss()
 # model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=opt_in_use, pretrain=False) <-- moving this down to the loop to reset for each optimizer
@@ -14,6 +13,7 @@ for optim in optimizer_used:
     start_time = time.time()
     print(f"--- Training & Testing {optim} ---")
     model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=optim, pretrain=False)
+    train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=32)
     optim_results = m.train(
         model=model,
         train_dataloader=train_dataloader,
