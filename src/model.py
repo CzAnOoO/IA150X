@@ -3,6 +3,7 @@ from torch import nn
 
 from torchvision import datasets, transforms, models
 from torchvision.transforms import ToTensor
+from torchvision.models import ResNet18_Weights
 from torch.utils.data import DataLoader
 
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ else:
 print(device)
 
 
-def get_dataloaders(batch_size: int = 16):
+def get_dataloaders(batch_size: int = 32):
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
@@ -104,11 +105,14 @@ def get_dataloaders(batch_size: int = 16):
     return muon_params, first_order_params"""
 
 
-def get_model_opt_loss():  # May allow selecting optimizer via string   
+def get_model_opt_loss(
+    opt_name="muon", pretrain=False
+):  # May allow selecting optimizer via string
     # Import the ResNet model, setup of loss function and the optimizers. Note that we use a pretrained model by using weights='DEFAULT'
     # If we want to compare untrained, we simply leave it blank: model = models.resnet18()
+    weights = ResNet18_Weights.DEFAULT if pretrain else None
     # model = models.resnet18(weights="DEFAULT")
-    model = models.resnet18(weights=None)
+    model = models.resnet18(weights=weights)
     # print(model)
 
     # The model has a final layer, fc, which has out_features=1000: (fc): Linear(in_features=512, out_features=1000, bias=True). The dataset we use only has
@@ -116,61 +120,68 @@ def get_model_opt_loss():  # May allow selecting optimizer via string
     # The way to change the final fc-layer was found on https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
     # Notice that they use a sequential layer. I've kept ours linear since that was the original ResNet18 architecture. Should we have overfitting issues, adding dropout could be useful
     num_ftrs = model.fc.in_features
-    model.fc = nn.Sequential(nn.Dropout(0.5), nn.Linear(num_ftrs, 3)) # changed from nn.Linear(num_ftrs, 3)
+    # model.fc = nn.Linear(num_ftrs, 3)
+    model.fc = nn.Sequential(  # https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
+        nn.Dropout(0.5),
+        nn.Linear(num_ftrs, 3),
+    )
     model = model.to(device)
 
+    loss_fn = nn.CrossEntropyLoss()
     # print(model)
 
-    muon_params = []
-    first_order_params = []
+    optimizers = []
+    if opt_name == "adam":
+        optimizers.append(torch.optim.Adam(params=model.parameters()))  # , lr=0.0003))
 
-    # Separating >= 2D-tensors that will be used by Muon, and 1D-tensors used by Adam/SGD. TODO: Double check the logic for param.ndim == 4. Should perhaps be appended to muon_params?
-    # for param in model.parameters():
-    #     if param.ndim == 2:
-    #         muon_params.append(param)
-    #     elif param.ndim == 4:
-    #         # param.view(param.shape[0], -1)  # Flatten all but first dim, solution from https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb. Possibly not wise to have this in the for-loop
-    #         muon_params.append(param)
-    #     else:
-    #         first_order_params.append(param)
+    elif opt_name == "sgd":
+        optimizers.append(
+            torch.optim.SGD(params=model.parameters())  # , lr=0.01, momentum=0.9)
+        )
 
-    for name, param in model.named_parameters():
-        if "fc" in name or "conv1" in name:  # Jordan's advice
-            first_order_params.append(param)
-            continue
-        if param.ndim >= 2:
-            muon_params.append(param)
-        else:
-            first_order_params.append(param)
+    elif opt_name == "muon":
+        muon_params = []
+        first_order_params = []
+        # Separating >= 2D-tensors that will be used by Muon, and 1D-tensors used by Adam/SGD. TODO: Double check the logic for param.ndim == 4. Should perhaps be appended to muon_params?
+        # for param in model.parameters():
+        #     if param.ndim == 2:
+        #         muon_params.append(param)
+        #     elif param.ndim == 4:
+        #         # param.view(param.shape[0], -1)  # Flatten all but first dim, solution from https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb. Possibly not wise to have this in the for-loop
+        #         muon_params.append(param)
+        #     else:
+        #         first_order_params.append(param)
 
-    # Muon implementation by keller Jordan https://github.com/KellerJordan/Muon/tree/master
-    """ param_groups = [
-        dict(params=muon_params, use_muon=True, lr=0.02, weight_decay=0.01),
-        dict(
-            params=first_order_params,
-            use_muon=False,
-            lr=3e-4,
-            betas=(0.9, 0.95),
-            weight_decay=0.01,
-        ),
-    ] """
+        for name, param in model.named_parameters():
+            if "fc" in name or "conv1" in name:  # Jordan's advice
+                first_order_params.append(param)
+                continue
+            if param.ndim >= 2:
+                muon_params.append(param)
+            else:
+                first_order_params.append(param)
 
-    loss_fn = nn.CrossEntropyLoss()
-    # optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
-    # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
-    # second_order_optimizer = torch.optim.Muon(params=muon_params, lr=0.01)
-    second_order_optimizer = Muon(
-        params=muon_params,
-        lr=0.001,
-        # weight_decay=0.2,
-        # momentum=0.7,
-    )
-    first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
-    #optimizer = torch.optim.Adam(params=params, lr=0.0003)
-    # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
+        # Muon implementation by keller Jordan https://github.com/KellerJordan/Muon/tree/master
+        """ param_groups = [
+            dict(params=muon_params, use_muon=True, lr=0.02, weight_decay=0.01),
+            dict(
+                params=first_order_params,
+                use_muon=False,
+                lr=3e-4,
+                betas=(0.9, 0.95),
+                weight_decay=0.01,
+            ),
+        ] """
 
-    return model, loss_fn, first_order_optimizer, second_order_optimizer
-    #return model, loss_fn, optimizer
+        # optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
+        # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
+        # second_order_optimizer = torch.optim.Muon(params=muon_params, lr=0.01)
+        second_order_optimizer = Muon(params=muon_params)
+        first_order_optimizer = torch.optim.Adam(params=first_order_params)
+        optimizers.extend([first_order_optimizer, second_order_optimizer])
+        # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
+
+    return model, loss_fn, optimizers  # , optimizer
 
 
 # Training the model
@@ -179,9 +190,9 @@ def train_step(
     model: torch.nn.Module,
     dataloader: torch.utils.data.DataLoader,
     loss_fn: torch.nn.Module,
-    #optimizer: torch.optim.Optimizer,
-    first_order_optimizer: torch.optim.Optimizer,
-    second_order_optimizer: torch.optim.Optimizer,
+    optimizers: list,
+    # first_order_optimizer: torch.optim.Optimizer,
+    # second_order_optimizer: torch.optim.Optimizer,
 ):
     size = len(dataloader.dataset)
 
@@ -201,17 +212,21 @@ def train_step(
         loss = loss_fn(y_pred, y)
         train_loss += loss.item()
         # 3. Optimizer zero grad
-        #optimizer.zero_grad()
-        first_order_optimizer.zero_grad()
-        second_order_optimizer.zero_grad()
+        # optimizer.zero_grad()
+        # first_order_optimizer.zero_grad()
+        # second_order_optimizer.zero_grad()
+        for opt in optimizers:
+            opt.zero_grad()
 
         # 4. Loss backward
         loss.backward()
 
         # 5. Optimizer step
-        #optimizer.step()
-        first_order_optimizer.step()
-        second_order_optimizer.step()
+        # optimizer.step()
+        # first_order_optimizer.step()
+        # second_order_optimizer.step()
+        for opt in optimizers:
+            opt.step()
 
         # Batch level
         # if batch % 10 == 0:
@@ -264,9 +279,9 @@ def train(
     train_dataloader: torch.utils.data.DataLoader,
     # test_dataloader: torch.utils.data.DataLoader,
     val_dataloader: torch.utils.data.DataLoader,
-    #optimizer: torch.optim.Optimizer,
-    first_order_optimizer=torch.optim.Optimizer,
-    second_order_optimizer=torch.optim.Optimizer,
+    optimizers: list,
+    # first_order_optimizer=torch.optim.Optimizer,
+    # second_order_optimizer=torch.optim.Optimizer,
     loss_fn: torch.nn.Module = nn.CrossEntropyLoss(),
     epochs: int = 30,
 ):
@@ -280,9 +295,9 @@ def train(
             model=model,
             dataloader=train_dataloader,
             loss_fn=loss_fn,
-            #optimizer=optimizer,
-            first_order_optimizer=first_order_optimizer,
-            second_order_optimizer=second_order_optimizer,
+            optimizers=optimizers,
+            # first_order_optimizer=first_order_optimizer,
+            # second_order_optimizer=second_order_optimizer,
         )
         val_loss, val_acc = test_step(
             model=model, dataloader=val_dataloader, loss_fn=loss_fn
@@ -307,33 +322,24 @@ def train(
 # ------------------------------------
 
 """ ——————————————————— Test ——————————————————— """
-train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
-#model, loss_fn, optimizer = get_model_opt_loss()
-model, loss_fn, first_order_optimizer, second_order_optimizer = get_model_opt_loss()
+# train_dataloader, test_dataloader, val_dataloader = get_dataloaders()
+# # model, loss_fn, optimizer = get_model_opt_loss()
+# model, loss_fn, optimizers = get_model_opt_loss(opt_name="muon", pretrain=False)
 
-# train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
-# print("loss:", train_loss)
-# print("acc:", train_acc)
+# # train_loss, train_acc = train_step(model, train_dataloader, loss_fn, optimizer)
+# # print("loss:", train_loss)
+# # print("acc:", train_acc)
 
-optim_results = train(  # trying to store this as a variable to be used for the plot
-    model=model,
-    train_dataloader=train_dataloader,
-    val_dataloader=val_dataloader,
-    loss_fn=loss_fn,
-    #optimizer=optimizer,
-    first_order_optimizer=first_order_optimizer,
-    second_order_optimizer=second_order_optimizer,
-    epochs=15,
-)
-print(f"Number of values in val_loss: {len(optim_results['val_loss'])}")
-plt.figure(figsize=(12, 5))
-plt.plot(optim_results["val_loss"], color="r", label="val_loss")
-plt.plot(optim_results["val_acc"], color="g", label="val_acc")
-plt.xlabel("Epoch")
-plt.ylabel("Val")
-plt.title("Loss & Accuracy vs Epoch for the Muon + Adam Optimizers")
-plt.legend()
-plt.show()
+# train(  # should this still be called train or do we name it def test?
+#     model=model,
+#     train_dataloader=train_dataloader,  # Since this is in the test-part, should we have test_dataloader?
+#     val_dataloader=val_dataloader,
+#     loss_fn=loss_fn,
+#     optimizers=optimizers,
+#     # first_order_optimizer=first_order_optimizer,
+#     # second_order_optimizer=second_order_optimizer,
+#     epochs=15,
+# )
 
 """ ———————————————————————————————————————————— """
 # epochs = 100
