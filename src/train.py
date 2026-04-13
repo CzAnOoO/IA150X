@@ -1,8 +1,10 @@
 import model as m
+import seed
 
-train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=32)
+seed.set_seed(1234567890)
+train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=16)
 # model, loss_fn, optimizer = get_model_opt_loss()
-model, loss_fn, optimizers = m.get_model_opt_loss(opt_name="adam", pretrain=False)
+model, loss_fn, optimizers = m.get_model_opt_loss(opt_name="muon", pretrain=False)
 
 m.train(  # should this still be called train or do we name it def test?
     model=model,
