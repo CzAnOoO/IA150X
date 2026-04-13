@@ -16,8 +16,8 @@ from pathlib import Path
 from muon_modified import Muon
 
 # Set the manual seeds - UPDATE: This does not affect to output
-torch.manual_seed(42)
-torch.cuda.manual_seed(42) # Attempt to get the same result each run. From section 3.4 https://www.learnpytorch.io/06_pytorch_transfer_learning/
+# torch.manual_seed(42)
+# torch.cuda.manual_seed(42) # Attempt to get the same result each run. From section 3.4 https://www.learnpytorch.io/06_pytorch_transfer_learning/
 
 # Make device agnostic code. When we train on Colabs GPUs device will be cuda
 if torch.cuda.is_available():

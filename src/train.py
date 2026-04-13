@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import time # https://www.educative.io/answers/how-to-measure-elapsed-time-in-python
 import seed
 
-seed.set_seed(1234567890)
+
 #opt_in_use = "adam"
 # model, loss_fn, optimizer = get_model_opt_loss()
 # model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=opt_in_use, pretrain=False) <-- moving this down to the loop to reset for each optimizer
@@ -12,6 +12,7 @@ optimizer_used = ["sgd", "adam", "muon"]
 all_results = {}
 
 for optim in optimizer_used:
+    seed.set_seed(1234567890)
     start_time = time.time()
     print(f"--- Training & Testing {optim} ---")
     model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=optim, pretrain=False)
