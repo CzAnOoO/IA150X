@@ -14,7 +14,5 @@ def set_seed(seed):
         torch.mps.manual_seed(seed)
 
     if torch.cuda.is_available():
-        torch.backends.cudnn.deterministic = True # section 3 https://www.geeksforgeeks.org/deep-learning/reproducibility-in-pytorch/
-        torch.backends.cudnn.benchmark = False
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
