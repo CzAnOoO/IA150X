@@ -122,7 +122,7 @@ def get_model_opt_loss(
     num_ftrs = model.fc.in_features
     # model.fc = nn.Linear(num_ftrs, 3)
     model.fc = nn.Sequential(  # https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
-        nn.Dropout(0.5),
+        nn.Dropout(0.2),
         nn.Linear(num_ftrs, 3),
     )
     model = model.to(device)
