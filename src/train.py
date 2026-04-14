@@ -12,7 +12,7 @@ optimizer_used = ["sgd", "adam", "muon"]
 all_results = {}
 
 for optim in optimizer_used:
-    seed.set_seed(1234567890)
+    # seed.set_seed(1234567890)
     start_time = time.time()
     print(f"--- Training & Testing {optim} ---")
     model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=optim, pretrain=False)
