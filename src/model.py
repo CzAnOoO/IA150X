@@ -33,13 +33,13 @@ def get_dataloaders(batch_size: int = 32):
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
-    # train_dir = project_root / "processed_dataset" / "train"
-    # test_dir = project_root / "processed_dataset" / "test"
-    # val_dir = project_root / "processed_dataset" / "val"
+    train_dir = project_root / "processed_dataset" / "train"
+    test_dir = project_root / "processed_dataset" / "test"
+    val_dir = project_root / "processed_dataset" / "val"
 
-    train_dir = project_root / "original_dataset" / "train"
-    test_dir = project_root / "original_dataset" / "test"
-    val_dir = project_root / "original_dataset" / "val"
+    # train_dir = project_root / "original_dataset" / "train"
+    # test_dir = project_root / "original_dataset" / "test"
+    # val_dir = project_root / "original_dataset" / "val"
 
     # Convert to tensors, from section 3.1
     data_transform = transforms.Compose(
@@ -52,7 +52,7 @@ def get_dataloaders(batch_size: int = 32):
                 mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
             ),  # https://docs.pytorch.org/vision/main/models/generated/torchvision.models.resnet18.html
             transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomRotation(10)
+            transforms.RandomRotation(10),
         ]
     )
 
@@ -330,7 +330,7 @@ def train(
 # # print("loss:", train_loss)
 # # print("acc:", train_acc)
 
-# train( 
+# train(
 #     model=model,
 #     train_dataloader=train_dataloader,
 #     val_dataloader=val_dataloader,
