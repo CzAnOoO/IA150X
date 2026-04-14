@@ -25,7 +25,7 @@ for optim in optimizer_used:
         optimizers=optimizers,
         # first_order_optimizer=first_order_optimizer,
         # second_order_optimizer=second_order_optimizer,
-        epochs=10,
+        epochs=15,
     )
     all_results[optim] = optim_results
     stop_time = time.time()
