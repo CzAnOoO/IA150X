@@ -33,13 +33,13 @@ def get_dataloaders(batch_size: int = 32):
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
-    train_dir = project_root / "processed_dataset" / "train"
-    test_dir = project_root / "processed_dataset" / "test"
-    val_dir = project_root / "processed_dataset" / "val"
+    # train_dir = project_root / "processed_dataset" / "train"
+    # test_dir = project_root / "processed_dataset" / "test"
+    # val_dir = project_root / "processed_dataset" / "val"
 
-    # train_dir = project_root / "original_dataset" / "train"
-    # test_dir = project_root / "original_dataset" / "test"
-    # val_dir = project_root / "original_dataset" / "val"
+    train_dir = project_root / "original_dataset" / "train"
+    test_dir = project_root / "original_dataset" / "test"
+    val_dir = project_root / "original_dataset" / "val"
 
     # Convert to tensors, from section 3.1
     data_transform = transforms.Compose(
@@ -122,7 +122,7 @@ def get_model_opt_loss(
     num_ftrs = model.fc.in_features
     # model.fc = nn.Linear(num_ftrs, 3)
     model.fc = nn.Sequential(  # https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
-        nn.Dropout(0.2),
+        nn.Dropout(0.5),
         nn.Linear(num_ftrs, 3),
     )
     model = model.to(device)
