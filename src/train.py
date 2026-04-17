@@ -25,12 +25,12 @@ for optim in optimizer_used:
         optimizers=optimizers,
         # first_order_optimizer=first_order_optimizer,
         # second_order_optimizer=second_order_optimizer,
-        epochs=3, # decrease from 15 for faster testing when troubleshooting
+        epochs=15,
     )
     all_results[optim] = optim_results
     stop_time = time.time()
     execution_time = stop_time - start_time
-    print(f"Execution Time for {optim}: {execution_time:.2f} seconds")
+    print(f"Execution Time for {optim}: {execution_time:.4f} seconds")
 
     _, test_acc = m.test_step(model=model, dataloader=test_dataloader, loss_fn=loss_fn)
     
