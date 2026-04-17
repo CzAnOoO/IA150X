@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-
+import time
 
 # from muon import (
 #     SingleDeviceMuonWithAuxAdam,
@@ -288,11 +288,12 @@ def train(
     epochs: int = 30,
 ):
 
-    # 2. Create empty results dictionary, and list for logging the time per epoch 
+    # 2. Create empty results dictionary 
     results = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
-   
+    epoch_times = []
     # 3. Loop through training and testing steps for a number of epochs
     for epoch in range(epochs):
+        epoch_start = time.time()
         train_loss, train_acc = train_step(
             model=model,
             dataloader=train_dataloader,
@@ -304,6 +305,8 @@ def train(
         val_loss, val_acc = test_step(
             model=model, dataloader=val_dataloader, loss_fn=loss_fn
         )
+        epoch_end = time.time()
+        epoch_time = epoch_end - epoch_start
         # 4. Print out what's happening
         print(
             f"Epoch: {epoch + 1} | "
@@ -311,6 +314,7 @@ def train(
             f"train_acc: {train_acc:.4f} | "
             f"val_loss: {val_loss:.4f} | "
             f"val_acc: {val_acc:.4f} | "
+            f"epoch_time: {epoch_time:.4f} | "
         )
         # Append to the results list. Will be used when plotting
         results["train_loss"].append(train_loss)
