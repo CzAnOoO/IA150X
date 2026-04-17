@@ -39,7 +39,7 @@ for optim in optimizer_used:
 
 # Plot validation loss for all three optimizers
 plt.figure(figsize=(15, 5))
-plt.subplot(1, 3, 1)
+plt.subplot(1, 2, 1)
 for optim, results in all_results.items():
     plt.plot(
         results["val_loss"], label=f"{optim} Loss", marker="o"
@@ -54,7 +54,7 @@ plt.legend()
 plt.show()
 
 # Plot accuracy for all three optimizers: https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb & https://www.w3schools.com/python/matplotlib_subplot.asp
-plt.subplot(1, 3, 2)
+plt.subplot(1, 2, 2)
 for optim, results in all_results.items():
     plt.plot(results["val_acc"], label=f"{optim} Accuracy", marker="o")
 # plt.plot(optim_results["val_loss"], color="r", label="val_loss")
@@ -66,15 +66,3 @@ plt.grid(True)
 plt.legend()
 plt.show()
 
-# Plot time per epoch for each optimizer
-plt.subplot(1, 3, 3)
-for optim, results in all_results.items():
-    plt.plot(results["epoch_times"], label=f"{optim} Time per Epoch", marker="o")
-# plt.plot(optim_results["val_loss"], color="r", label="val_loss")
-# plt.plot(optim_results["val_acc"], color="g", label="val_acc")
-plt.xlabel("Epoch")
-plt.ylabel("Time")
-plt.title(f"Time per Epoch for Each Optimizer")
-plt.grid(True)
-plt.legend()
-plt.show()
