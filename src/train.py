@@ -11,6 +11,7 @@ train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size
 optimizer_used = ["sgd", "adam", "muon"]
 all_results = {}
 
+
 for optim in optimizer_used:
     # seed.set_seed(1234567890)
     start_time = time.time()
@@ -25,7 +26,7 @@ for optim in optimizer_used:
         optimizers=optimizers,
         # first_order_optimizer=first_order_optimizer,
         # second_order_optimizer=second_order_optimizer,
-        epochs=15,
+        epochs=5,
     )
     all_results[optim] = optim_results
     stop_time = time.time()
@@ -39,7 +40,7 @@ for optim in optimizer_used:
 
 # Plot validation loss for all three optimizers
 plt.figure(figsize=(15, 5))
-plt.subplot(1, 2, 1)
+plt.subplot(2, 1, 1)
 for optim, results in all_results.items():
     plt.plot(
         results["val_loss"], label=f"{optim} Loss", marker="o"
@@ -51,10 +52,10 @@ plt.ylabel("Validation Loss")
 plt.title(f"Validation Loss vs Epoch for the SGD, Adam, and Muon Optimizers")
 plt.grid(True)
 plt.legend()
-plt.show()
+# plt.show()
 
 # Plot accuracy for all three optimizers: https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb & https://www.w3schools.com/python/matplotlib_subplot.asp
-plt.subplot(1, 2, 2)
+plt.subplot(2, 1, 2)
 for optim, results in all_results.items():
     plt.plot(results["val_acc"], label=f"{optim} Accuracy", marker="o")
 # plt.plot(optim_results["val_loss"], color="r", label="val_loss")
