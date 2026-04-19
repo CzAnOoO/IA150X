@@ -122,7 +122,7 @@ def get_model_opt_loss(
     num_ftrs = model.fc.in_features
     # model.fc = nn.Linear(num_ftrs, 3)
     model.fc = nn.Sequential(  # https://discuss.pytorch.org/t/resnet-last-layer-modification/33530
-        nn.Dropout(0.5),
+        # nn.Dropout(0.5),
         nn.Linear(num_ftrs, 3),
     )
     model = model.to(device)
@@ -132,12 +132,10 @@ def get_model_opt_loss(
 
     optimizers = []
     if opt_name == "adam":
-        optimizers.append(torch.optim.Adam(params=model.parameters()))  # , lr=0.0003))
+        optimizers.append(torch.optim.Adam(params=model.parameters(), lr=0.0003))
 
     elif opt_name == "sgd":
-        optimizers.append(
-            torch.optim.SGD(params=model.parameters())  # , lr=0.01, momentum=0.9)
-        )
+        optimizers.append(torch.optim.SGD(params=model.parameters(), lr=0.008))
 
     elif opt_name == "muon":
         muon_params = []
@@ -172,12 +170,8 @@ def get_model_opt_loss(
                 weight_decay=0.01,
             ),
         ] """
-
-        # optimizer = torch.optim.SGD(params=model.parameters(), lr=0.01)
-        # optimizer = torch.optim.Adam(params=model.parameters(), lr=0.0003)
-        # second_order_optimizer = torch.optim.Muon(params=muon_params, lr=0.01)
-        second_order_optimizer = Muon(params=muon_params)
-        first_order_optimizer = torch.optim.Adam(params=first_order_params)
+        second_order_optimizer = Muon(params=muon_params, lr=0.0003)
+        first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
         optimizers.extend([first_order_optimizer, second_order_optimizer])
         # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
 
