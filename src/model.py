@@ -36,14 +36,14 @@ def get_dataloaders(batch_size: int = 32):
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
     # Benchmark 1 - "processed_dataset"
-    train_dir = project_root / "processed_dataset" / "train"
-    test_dir = project_root / "processed_dataset" / "test"
-    val_dir = project_root / "processed_dataset" / "val"
+    #train_dir = project_root / "processed_dataset" / "train"
+    #test_dir = project_root / "processed_dataset" / "test"
+    #val_dir = project_root / "processed_dataset" / "val"
 
     # Benchmark 2 - "original_dataset"
-    # train_dir = project_root / "original_dataset" / "train"
-    # test_dir = project_root / "original_dataset" / "test"
-    # val_dir = project_root / "original_dataset" / "val"
+    train_dir = project_root / "original_dataset" / "train"
+    test_dir = project_root / "original_dataset" / "test"
+    val_dir = project_root / "original_dataset" / "val"
 
     # Convert to tensors, from section 3.1
     data_transform = transforms.Compose(
