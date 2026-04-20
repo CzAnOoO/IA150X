@@ -33,13 +33,13 @@ def get_dataloaders(batch_size: int = 32):
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
-    # train_dir = project_root / "processed_dataset" / "train"
-    # test_dir = project_root / "processed_dataset" / "test"
-    # val_dir = project_root / "processed_dataset" / "val"
+    train_dir = project_root / "processed_dataset" / "train"
+    test_dir = project_root / "processed_dataset" / "test"
+    val_dir = project_root / "processed_dataset" / "val"
 
-    train_dir = project_root / "original_dataset" / "train"
-    test_dir = project_root / "original_dataset" / "test"
-    val_dir = project_root / "original_dataset" / "val"
+    # train_dir = project_root / "original_dataset" / "train"
+    # test_dir = project_root / "original_dataset" / "test"
+    # val_dir = project_root / "original_dataset" / "val"
 
     # Convert to tensors, from section 3.1
     data_transform = transforms.Compose(
@@ -132,10 +132,10 @@ def get_model_opt_loss(
 
     optimizers = []
     if opt_name == "adam":
-        optimizers.append(torch.optim.Adam(params=model.parameters(), lr=0.0003))
+        optimizers.append(torch.optim.Adam(params=model.parameters()))
 
     elif opt_name == "sgd":
-        optimizers.append(torch.optim.SGD(params=model.parameters(), lr=0.008))
+        optimizers.append(torch.optim.SGD(params=model.parameters()))
 
     elif opt_name == "muon":
         muon_params = []
@@ -170,8 +170,8 @@ def get_model_opt_loss(
                 weight_decay=0.01,
             ),
         ] """
-        second_order_optimizer = Muon(params=muon_params, lr=0.0003)
-        first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0003)
+        second_order_optimizer = Muon(params=muon_params)
+        first_order_optimizer = torch.optim.Adam(params=first_order_params)
         optimizers.extend([first_order_optimizer, second_order_optimizer])
         # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
 

@@ -11,19 +11,17 @@ train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size
 optimizer_used = ["sgd", "adam", "muon"]
 all_results = {}
 
-num_runs = 5
-num_epochs = 15
-run = 1
+num_runs = 1
+num_epochs = 2
 
 for optim in optimizer_used:
-    print(f"------------------------ Run: {run} ------------------------")
-    run += 1
+    print(f"---------------------------------------------------------")
     total_results = {"val_loss": [0] * num_epochs, "val_acc": [0] * num_epochs}
     total_test_acc = 0
     total_exec_time = 0
 
     for i in range(num_runs):
-        seed.set_seed(1234567890 + i)
+        # seed.set_seed(1234567890 + i - 1)
         print(f"--- Training & Testing {optim} ---")
         start_time = time.time()
         model, loss_fn, optimizers = m.get_model_opt_loss(
@@ -66,7 +64,7 @@ for optim in optimizer_used:
 x = list(range(1, num_epochs + 1))
 
 # Plot validation loss for all three optimizers
-# plt.figure(figsize=(9, 3))
+plt.figure(figsize=(3, 7))
 plt.subplot(2, 1, 1)
 for optim, results in all_results.items():
     # https://huggingface.co/datasets/bird-of-paradise/muon-tutorial/blob/main/Muon.ipynb
@@ -94,5 +92,6 @@ plt.xticks(x)
 plt.grid(True)
 plt.legend()
 
-plt.tight_layout()
+# plt.tight_layout()
+plt.savefig("results.pdf")
 plt.show()
