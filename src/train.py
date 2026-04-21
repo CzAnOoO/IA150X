@@ -7,7 +7,7 @@ import seed
 # opt_in_use = "adam"
 # model, loss_fn, optimizer = get_model_opt_loss()
 # model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=opt_in_use, pretrain=False) <-- moving this down to the loop to reset for each optimizer
-train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=256) #adjusting 16, 32, 64, 128, 256
+train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=1024) #adjusting 16, 32, 64, 128, 256 --> 1024 and 2048 for A100 GPU
 optimizer_used = ["sgd", "adam", "muon"]
 all_results = {}
 
