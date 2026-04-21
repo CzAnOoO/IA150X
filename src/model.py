@@ -36,14 +36,14 @@ def get_dataloaders(batch_size: int = 32):
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
     # Benchmark 1 - "processed_dataset"
-    train_dir = project_root / "processed_dataset" / "train"
-    test_dir = project_root / "processed_dataset" / "test"
-    val_dir = project_root / "processed_dataset" / "val"
+    #train_dir = project_root / "processed_dataset" / "train"
+    #test_dir = project_root / "processed_dataset" / "test"
+    #val_dir = project_root / "processed_dataset" / "val"
 
     # Benchmark 2 - "original_dataset"
-    #train_dir = project_root / "original_dataset" / "train"
-    #test_dir = project_root / "original_dataset" / "test"
-    #val_dir = project_root / "original_dataset" / "val"
+    train_dir = project_root / "original_dataset" / "train"
+    test_dir = project_root / "original_dataset" / "test"
+    val_dir = project_root / "original_dataset" / "val"
 
     # Convert to tensors, from section 3.1
     data_transform = transforms.Compose(
@@ -136,12 +136,12 @@ def get_model_opt_loss(
 
     optimizers = []
     if opt_name == "adam":
-        optimizers.append(torch.optim.Adam(params=model.parameters())) # No lr for Benchmark 1 and Benchmark 2
-        #optimizers.append(torch.optim.Adam(params=model.parameters(), lr=0.0005))
+        #optimizers.append(torch.optim.Adam(params=model.parameters())) # No lr for Benchmark 1 and Benchmark 2
+        optimizers.append(torch.optim.Adam(params=model.parameters(), lr=0.0005))
 
     elif opt_name == "sgd":
-        optimizers.append(torch.optim.SGD(params=model.parameters()))
-        #optimizers.append(torch.optim.SGD(params=model.parameters(), lr=0.008))
+        #optimizers.append(torch.optim.SGD(params=model.parameters()))
+        optimizers.append(torch.optim.SGD(params=model.parameters(), lr=0.008))
 
     elif opt_name == "muon":
         muon_params = []
@@ -176,10 +176,10 @@ def get_model_opt_loss(
                 weight_decay=0.01,
             ),
         ] """
-        second_order_optimizer = Muon(params=muon_params)
-        first_order_optimizer = torch.optim.Adam(params=first_order_params) # No lr for Benchmark 1 and Benchmark 2
-        #second_order_optimizer = Muon(params=muon_params, lr=0.0005)
-        #first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0005)
+        #second_order_optimizer = Muon(params=muon_params)
+        #first_order_optimizer = torch.optim.Adam(params=first_order_params) # No lr for Benchmark 1 and Benchmark 2
+        second_order_optimizer = Muon(params=muon_params, lr=0.0005)
+        first_order_optimizer = torch.optim.Adam(params=first_order_params, lr=0.0005)
         optimizers.extend([first_order_optimizer, second_order_optimizer])
         # optimizer = SingleDeviceMuonWithAuxAdam(param_groups)
 
