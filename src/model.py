@@ -33,13 +33,13 @@ def get_dataloaders(batch_size: int = 32):
     # See https://www.learnpytorch.io/04_pytorch_custom_datasets/ which served as a guide for this process
     project_root = Path(__file__).resolve().parent.parent
     # From section 2:
-    train_dir = project_root / "processed_dataset" / "train"
-    test_dir = project_root / "processed_dataset" / "test"
-    val_dir = project_root / "processed_dataset" / "val"
+    # train_dir = project_root / "processed_dataset" / "train"
+    # test_dir = project_root / "processed_dataset" / "test"
+    # val_dir = project_root / "processed_dataset" / "val"
 
-    # train_dir = project_root / "original_dataset" / "train"
-    # test_dir = project_root / "original_dataset" / "test"
-    # val_dir = project_root / "original_dataset" / "val"
+    train_dir = project_root / "original_dataset" / "train"
+    test_dir = project_root / "original_dataset" / "test"
+    val_dir = project_root / "original_dataset" / "val"
 
     # Convert to tensors, from section 3.1
     data_transform = transforms.Compose(
@@ -128,7 +128,7 @@ def get_model_opt_loss(
     model = model.to(device)
 
     loss_fn = nn.CrossEntropyLoss()
-    # print(model)
+    print(model)
 
     optimizers = []
     if opt_name == "adam":
@@ -151,11 +151,13 @@ def get_model_opt_loss(
         #         first_order_params.append(param)
 
         for name, param in model.named_parameters():
-            if "fc" in name or "conv1" in name:  # Jordan's advice
+            if "fc" in name or name.startswith("conv1"):  # Jordan's advice
                 first_order_params.append(param)
+                # print(f"Adding to first_order: {name}")
                 continue
             if param.ndim >= 2:
                 muon_params.append(param)
+                # print(f"Adding to Muon: {name}")
             else:
                 first_order_params.append(param)
 

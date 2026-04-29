@@ -7,12 +7,13 @@ import seed
 # opt_in_use = "adam"
 # model, loss_fn, optimizer = get_model_opt_loss()
 # model, loss_fn, optimizers = m.get_model_opt_loss(opt_name=opt_in_use, pretrain=False) <-- moving this down to the loop to reset for each optimizer
-train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=16)
+train_dataloader, test_dataloader, val_dataloader = m.get_dataloaders(batch_size=256)
 optimizer_used = ["sgd", "adam", "muon"]
+# optimizer_used = ["muon"]
 all_results = {}
 
-num_runs = 1
-num_epochs = 2
+num_runs = 5
+num_epochs = 15
 
 for optim in optimizer_used:
     print(f"---------------------------------------------------------")
@@ -21,7 +22,7 @@ for optim in optimizer_used:
     total_exec_time = 0
 
     for i in range(num_runs):
-        # seed.set_seed(1234567890 + i - 1)
+        seed.set_seed(1234567890 + i - 1)
         print(f"--- Training & Testing {optim} ---")
         start_time = time.time()
         model, loss_fn, optimizers = m.get_model_opt_loss(
